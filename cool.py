@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE
 
 # define setup.py template
 setup_file = Template('''import os
-from setuptools import setup
+from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.exceptions import InstallationError
 
@@ -21,7 +21,8 @@ def read(fname):
 
 setup(
 ${lines}    install_requires=install_requires,
-    long_description=read('README.md')
+    long_description=read('README.md'),
+    packages=find_packages()
 )''')
 
 
@@ -40,7 +41,7 @@ def git_config(key):
 def main():
     # define setup fields
     fields = ['name', 'version', 'author', 'author_email', 'description',
-              'license', 'keywords', 'url', 'packages', 'entry_points']
+              'license', 'keywords', 'url', 'entry_points']
     # define default value
     defaults = {
         'name': os.path.relpath('.', '..'),
@@ -48,7 +49,6 @@ def main():
         'license': 'MIT',
         'author': git_config('user.name'),
         'author_email': git_config('user.email'),
-        'packages': 'package-name',
         'entry_points': 'command=package-name:main',
     }
     # save results here
@@ -73,16 +73,7 @@ def main():
     # combine all the fields and values into one string
     lines = ''
     for field, value in zip(fields, values):
-        if field == 'packages':
-            # if value equals to default value, then we should ignore package
-            if value == 'package-name':
-                continue
-
-            # compile package names as a string
-            lines += '    {}=[{}],\n'.format(
-                field,
-                ', '.join(['\'{}\''.format(s) for s in value.split()]))
-        elif field == 'entry_points':
+        if field == 'entry_points':
             # if value equals to default value, then we should ignore it
             if value == 'command=package-name:main':
                 continue
